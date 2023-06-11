@@ -1,0 +1,271 @@
+
+</<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8">
+		<title>Stop Watch</title>
+		<style text="css">
+			.controlPanel{
+				position: fixed;
+				width: 100%;
+				margin-top: 0;
+				background-color: #ffffff;
+			}
+			.wrapper{
+				margin: auto;
+				margin-top: 0;
+			}
+			.containor{
+      		max-width: 640px;
+			}
+			.title{
+				width: 100%;
+				background-color: #2983cc;
+				color: white;
+				font-size: 50px;
+			}
+			.center{
+				text-align: center;	
+			}
+			.clock{
+				font-size: 80px;
+				background-color: #dddddd;
+			}
+			.operation_panel{
+				height: 100px;
+				width: 100%;
+			}
+			.operation_label{
+				height: 60px;
+				width: 100%;
+				text-align: center;	
+				font-size: 50px;	
+			}
+			table{
+				height: 100px;
+				width: 100%;	
+				text-align: center;		
+			}
+			.operation_key{
+				height: 40px;
+				width: 100%;
+				font-size: 25px;			
+			}
+			.operation_table{
+				table-layout: fixed;
+			}
+			.active{
+				background-color: #3f94d9;			
+			}
+			.inactive{
+				background-color: #999999;			
+			}
+			.lap_num{
+				font-size: 60px;
+			}
+			.button:hover{
+				cursor: pointer;
+			}
+			.active:hover{
+				cursor: pointer;
+			}
+			#lap_box{
+				max-width: 200px;
+				font-size: 40px;
+			}
+			body{
+				font-family: system-ui;
+				margin-top: 0;
+			}
+			.spacer{
+				height: 300px;
+			}
+			#bottom{
+				position: fixed;
+				right: 0;
+				font-size: 30px;
+				width: 100%;
+				bottom: 0;
+				color: white;
+				text-align: center;
+				vertical-align: middle;
+				background-color: #555555;
+			}
+			.bottom_table{
+				height: 50px;
+				table-layout: fixed;
+				font-size: 30px;
+				color: white;
+				border-collapse: separate;
+				border-color: white;
+			}
+			.bottom_button{
+				background-color: #333333;
+			}
+		</style>
+		<script type="text/javascript">
+			var started = Date.now();
+			var paused_at = 0;
+			var measuring = false;
+			var paused = false;
+			var timer = "undefined";
+			var lap_no = 0;
+			document.addEventListener('keypress', keypress_ivent);
+			function keypress_ivent(e) {
+				if(e.code === 'Space'){
+					document.getElementById("button1").click();
+				}
+				if(e.code === 'KeyQ'){
+					document.getElementById("button2").click();
+				}
+				if(e.code === 'KeyP'){
+					document.getElementById("button3").click();
+				}
+				return false; 
+			}
+			
+			function ms_to_time(ms) {
+				let miliseconds = ms % 1000;
+				let deciseconds = Math.floor(miliseconds/100);
+				let seconds = Math.floor(ms/1000) % 60;
+				let minutes = Math.floor(ms/1000/60);
+				return String(minutes) + ":" + ('00' + seconds).slice(-2) + "." + ("0" + deciseconds).slice(-1);
+			}
+			function start(){
+				measuring = true;
+				document.getElementById("button2").classList.toggle("active");
+				document.getElementById("button2").classList.toggle("inactive");
+				document.getElementById("button1_label").textContent = "Lap";
+				document.getElementById("button1").setAttribute("onclick", "lap();");
+				document.getElementById("button2").setAttribute("onclick", "pauseCount();");
+				started = Date.now();
+				timer = setInterval(show_time, 100);
+			}
+			function lap() {
+				lap_no = lap_no + 1;
+				document.getElementById("lap_num").textContent = lap_no;
+				let now = Date.now();
+				var new_element = document.createElement('div');
+				new_element.textContent = (now - started + paused_at)/1000;
+				document.getElementById("lap_box").appendChild(new_element)
+			}
+			function pauseCount() {
+				measuring = false;
+				paused_at = paused_at + Date.now() - started;
+				document.getElementById("button1").setAttribute("onclick", "start();");
+				document.getElementById("button1_label").textContent = "Resume";
+				document.getElementById("button2").setAttribute("onclick", "");
+				document.getElementById("button2").classList.toggle("active");
+				document.getElementById("button2").classList.toggle("inactive");
+				clearInterval(timer);
+			}
+			function show_time(){
+				let now = Date.now();
+				let time = now - started + paused_at;
+				let timeString = ms_to_time(time);
+				document.getElementById("clock_box").textContent = timeString;
+			}
+			function reset() {
+				location.reload();
+			}
+			function writeOut() {
+				let lap_box = document.getElementById("lap_box");
+				let laps = lap_box.getElementsByTagName("div");
+				var str = ""
+				for (const element of laps) {
+					//console.log(element.textContent);
+					str = str + element.textContent + "\n";
+				}
+				return str
+			}
+			function copyToClipboard(text){
+				// テキストコピー用の一時要素を作成
+				const pre = document.createElement('pre');
+				
+				// テキストを選択可能にしてテキストセット
+				pre.style.webkitUserSelect = 'auto';
+				pre.style.userSelect = 'auto';
+				pre.textContent = text;
+				
+				// 要素を追加、選択してクリップボードにコピー
+				document.body.appendChild(pre);
+				document.getSelection().selectAllChildren(pre);
+				const result = document.execCommand('copy');
+			
+				// 要素を削除
+				document.body.removeChild(pre);
+			
+				return result;
+			}
+			function copy() {
+				var str = writeOut();
+				copyToClipboard(str);
+			}
+			function save() {
+				var str = writeOut();
+				const blob = new Blob([str],{type:"text/plain"});
+				const link = document.createElement('a');
+				link.href = URL.createObjectURL(blob);
+				link.download = 'laptimes.csv';
+				link.click();
+			}
+		</script>
+	</head>
+	<body>
+		<div id="bottom">
+			<table class="bottom_table"><tbody>
+			<td class="button bottom_button" onclick="save();">Save as CSV</td>
+			<td class="button bottom_button" onclick="copy();">Copy to clipboard</td>
+			</tbody></table>
+		</div> 
+		<div class="controlPanel">	
+			<div class="wrapper containor">		
+				<div class="title center">
+					Stop Watch
+				</div>
+				<div class="clock center">
+					<table><tbody>
+						<tr>
+							<td class="clock" id="clock_box">0:00.0</td>
+							<td>
+								<div>
+									<div>Lap No.</div>
+									<div class="lap_num" id="lap_num">0</div>
+								</div>
+							</td>
+						</tr>
+					</tbody></table>
+				</div>
+				<div>
+					<table class="operation_table"><tbody>
+						<tr>
+							<td class="active" id="button1" onclick="start();">
+								<div>
+									<div class="operation_label" id="button1_label">Start</div>
+									<div class="operation_key">[Space]</div>
+								</div>
+							</td>
+							<td class="inactive" id="button2" onclick="">
+								<div>
+									<div class="operation_label" id="button2_label">Stop</div>
+									<div class="operation_key">[Q]</div>
+								</div>
+							</td>
+							<td class="active" id="button3" onclick="reset();">
+								<div>
+									<div class="operation_label" id="button3_label">Reset</div>
+									<div class="operation_key">[P]</div>
+								</div>
+							</td>
+						</tr>
+					</tbody></table>
+				</div>
+			</div>
+		</div>
+		<div class="spacer wrapper containor"></div>
+		<div class="wrapper containor">
+			<div id="lap_box" class="wrapper"></div>
+		</div>
+		<div style="height: 50px;"></div>
+	</body>
+</html>
